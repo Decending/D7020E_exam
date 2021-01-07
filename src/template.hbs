@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <style>
+        table, th, td{
+        border: 1px solid black;
+        border-collapse: collapse;
+    }
+    th, td{
+        padding: 5px;
+    }
+    </style>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-giJF6kkoqNQ00vy+HMDP7azOuL0xtbfIcaT9wjKHr8RbDVddVHyTfAAsrekwKmP1" crossorigin="anonymous">
+
+    </head>
+    <body>
+      <h1>SRP analysis result</h1>
+      <table style="width:100%">
+    <thead>
+      <tr>
+        <th scope="col">Task id</th>
+        <th scope="col">Response Time</th>
+        <th scope="col">Execution time</th>
+        <th scope="col">Blocking Time</th>
+        <th scope="col">Preemption</th>
+      </tr>
+    </thead>
+    <tbody>
+    {{#each srp_results as |t| ~}}
+      {{~log @index~}}
+      <tr>
+        <td>{{t.id}}</td>
+        <td> {{format t.response_time ~}} </td>
+        <td> {{format t.execution_time ~}} </td>
+        <td> {{format t.blocking_time ~}} </td>
+        <td> {{format t.preemption_time ~}} </td>
+      </tr>
+      </li>
+    {{/each~}}
+    </tbody>
+  </table>
+    <h2>CPU load: {{load}}%</h2>
+
+  </body>
+</html>
