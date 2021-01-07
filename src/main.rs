@@ -106,3 +106,13 @@ fn open() {
         Err(error) => println!("Failure! exit status: {:?}", error),
     }
 }
+
+/*
+- What are the consequences of C(t) > A(t)?
+
+If the execution time is larger than the inter arrival time it follows that the deadline has been missed.
+
+- What are the consequences of load > 1?
+
+It translates to more than 100% of the cpus capacity being required and hence the set of tasks are not schedulable.
+*/
