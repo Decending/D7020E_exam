@@ -77,7 +77,7 @@ fn update_tr(s: String, trace: &Trace, trmap: &mut TaskResources) {
 //-------------------------------
 
 fn execution_time(task: &Task) -> u32{
-    let execution = task.trace.end - task.trace.start;
+    let execution = task.trace.end.wrapping_sub(task.trace.start);
     execution
 }
 
@@ -85,7 +85,7 @@ pub fn cpu_load(tasks: &Vec<Task>) -> f64 {
     let mut load: f64 = 0.0;
 
     for t in tasks {
-        load += (t.trace.end as f64 - t.trace.start as f64) / (t.inter_arrival as f64);
+        load += ((t.trace.end).wrapping_sub(t.trace.start) as f64) / (t.inter_arrival as f64);
     }
     load
 }
@@ -116,7 +116,7 @@ fn fetch_block(trace: &Trace, resource: &str) -> u32 {
     let mut block: u32 = 0;
 
     if trace.id == resource {
-        block = trace.end - trace.start;
+        block = trace.end.wrapping_sub(trace.start);
     } else if trace.inner.len() != 0 {
         for i in &trace.inner {
             let calculated_block = fetch_block(&i, resource);
@@ -132,7 +132,7 @@ fn preemption_time(task: &Task, tasks: &Vec<Task>, ip: &HashMap<String, u8>, tr:
     let preemption;
   
     if exact {
-        preemption = preemption_revisited(task, tasks, ip, tr);
+        preemption = preemption_revisited(task, tasks, ip, tr, blocking_time(task, tasks, ip, tr) + execution_time(task));
     } else {
         preemption = preemption_approximation(task, tasks);
     }
@@ -143,26 +143,28 @@ fn preemption_approximation(task: &Task, tasks: &Vec<Task>) -> u32 {
     let mut preemption = 0;
     for t in tasks {
         if t.prio > task.prio {
-            preemption += (t.trace.end - t.trace.start) * ((task.deadline + t.inter_arrival - 1) / t.inter_arrival);
+            preemption += execution_time(t) * ((task.deadline + t.inter_arrival - 1) / t.inter_arrival);
         }
     }
     preemption
 }
 
-fn preemption_revisited(task: &Task, tasks: &Vec<Task>, ip: &HashMap<String, u8>, tr: &HashMap<String, HashSet<String>>) -> u32 {
-    let base_case = blocking_time(task, tasks, ip, tr) + task.trace.end - task.trace.start;
+fn preemption_revisited(task: &Task, tasks: &Vec<Task>, ip: &HashMap<String, u8>, tr: &HashMap<String, HashSet<String>>, prev: u32) -> u32 {
+    let base_case = blocking_time(task, tasks, ip, tr) + execution_time(task);
     let mut preemption: u32 = 0;
     for t in tasks{
        if t.prio > task.prio{
-           preemption += (base_case + t.inter_arrival - 1)/( t.inter_arrival) * (t.trace.end - t.trace.start);
+           preemption += ((prev + t.inter_arrival - 1)/( t.inter_arrival)) * (execution_time(t));
        }
     }
     if (preemption + base_case) == base_case{
         return 0;
-    } else{
-        preemption = preemption + base_case;
-        preemption
+    } else if (preemption + base_case) == prev{
+        return prev - base_case;
+    } else {
+        preemption = preemption_revisited(task, tasks, ip, tr, preemption + base_case);
     }
+    preemption
 }
 
 fn response_time(task: &Task, tasks: &Vec<Task>, ip: &HashMap<String, u8>, tr: &HashMap<String, HashSet<String>>, exact: bool) -> u32{
